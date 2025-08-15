@@ -1,0 +1,64 @@
+# Nombre del Workflow para el despliegue en GitHub Pages
+name: Deploy Vue App to GitHub Pages
+
+on:
+  # Se activa en cada push a la rama "main"
+  push:
+    branches: [ "main" ]
+
+  # Permite ejecutar este workflow manualmente desde la pestaña Actions en GitHub
+  workflow_dispatch:
+
+# Establece los permisos necesarios para que la Action pueda desplegar en GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Define un solo trabajo concurrente para evitar despliegues conflictivos
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  # Trabajo de construcción (build)
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Usamos la versión de Node especificada en tu package.json
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        # El comando "npm run build" usará tu vite.config.js (con la "base" correcta)
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Sube el contenido de la carpeta "dist" generada por el build
+          path: './dist'
+
+  # Trabajo de despliegue (deploy)
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
