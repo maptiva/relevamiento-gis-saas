@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # .
 
 This template should help get you started developing with Vue 3 in Vite.
@@ -33,3 +34,6 @@ npm run build
 ```sh
 npm run lint
 ```
+=======
+# relevamiento-gis-saas
+>>>>>>> f421ae00032925cfd44810a7670b26e6f6ef0c3c
