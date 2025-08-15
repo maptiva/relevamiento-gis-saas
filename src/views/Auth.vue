@@ -9,7 +9,12 @@
         </div>
         <div class="form-group">
           <label for="password">Contraseña</label>
-          <input id="password" type="password" v-model="password" required />
+          <div class="password-wrapper">
+            <input id="password" :type="passwordFieldType" v-model="password" required />
+            <span class="password-toggle-icon" @click="togglePasswordVisibility">
+              <font-awesome-icon :icon="['fas', passwordVisible ? 'eye-slash' : 'eye']" />
+            </span>
+          </div>
         </div>
         <button type="submit" class="auth-button">
           {{ isLoginMode ? 'Iniciar Sesión' : 'Crear Cuenta' }}
@@ -32,6 +37,14 @@ const password = ref('');
 const isLoginMode = ref(true);
 const router = useRouter();
 const auth = getAuth();
+
+const passwordFieldType = ref('password');
+const passwordVisible = ref(false);
+
+const togglePasswordVisibility = () => {
+  passwordVisible.value = !passwordVisible.value;
+  passwordFieldType.value = passwordVisible.value ? 'text' : 'password';
+};
 
 const handleSubmit = async () => {
   if (isLoginMode.value) {
@@ -99,7 +112,7 @@ h1 {
   padding: 0.75rem;
   border: 1px solid #ddd;
   border-radius: 4px;
-  box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
+  box-sizing: border-box;
 }
 
 .auth-button {
@@ -124,4 +137,27 @@ h1 {
   cursor: pointer;
   text-decoration: underline;
 }
-</style>```
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input {
+  padding-right: 2.5rem;
+}
+
+.password-toggle-icon {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #777;
+  width: 2.5rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>

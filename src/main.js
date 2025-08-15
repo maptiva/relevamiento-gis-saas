@@ -8,18 +8,16 @@ import router from './router'
 import { user } from './composables/getUser'
 
 /* import the fontawesome core */
-import { library, dom } from '@fortawesome/fontawesome-svg-core'
+import { library } from '@fortawesome/fontawesome-svg-core'
 
 /* import font awesome icon component */
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 /* import specific icons */
-import { faLocationCrosshairs, faDrawPolygon, faWaveSquare, faCircle } from '@fortawesome/free-solid-svg-icons'
+import { faLocationCrosshairs, faDrawPolygon, faWaveSquare, faCircle, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
-library.add(faLocationCrosshairs, faDrawPolygon, faWaveSquare, faCircle)
-
-dom.watch() // This will kick of the initial replacement of i to svg tags
+library.add(faLocationCrosshairs, faDrawPolygon, faWaveSquare, faCircle, faEye, faEyeSlash)
 
 // Inicializa Firebase
 initializeApp(firebaseConfig)
