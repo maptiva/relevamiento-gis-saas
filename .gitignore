@@ -19,7 +19,7 @@ coverage
 
 # Archivos y carpetas locales de desarrollo y backups
 /_codigo-original
-/dist
+
 *.txt
 *.md
 !README.md
