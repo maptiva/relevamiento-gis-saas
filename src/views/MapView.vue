@@ -91,6 +91,8 @@ const tempDrawnLayer = ref(null);
 
 let unsubscribeFirestore = null; // Variable para almacenar la función de desuscripción de Firestore
 
+const leafletLayersMap = ref(new Map()); // Map to store Leaflet layers by feature ID
+
 // Define common styles for drawn features
 const shapeOptions = {
   color: '#3388ff',       // Light blue (Leaflet default)
@@ -359,41 +361,18 @@ const handleNameConfirmed = async (name) => {
   }
   geojson.properties.name = name;
 
-  let newLayer = null;
   const db = getFirestore();
-
-  // Re-add the layer to the map with the new properties
-  L.geoJSON(geojson, {
-    pointToLayer: (feature, latlng) => {
-      return L.circleMarker(latlng, circleMarkerStyle);
-    },
-    onEachFeature: (feature, layer) => {
-      bindFeatureClickEvent(layer);
-      toRaw(drawnItems.value).addLayer(layer);
-      newLayer = layer;
-      createAndBindPopup(layer); // Use the new function
-    }
-  });
 
   try {
     const featuresCollection = collection(db, 'projects', route.params.id, 'features');
-    const docRef = await addDoc(featuresCollection, {
+    // The onSnapshot listener will pick up this new document and update projectFeaturesList
+    await addDoc(featuresCollection, {
       geometry: JSON.stringify(geojson),
       name: name
     });
-    if (newLayer) {
-      newLayer.feature.id = docRef.id;
-      newLayer.feature.properties = geojson.properties;
-    }
-    // Add to projectFeaturesList
-    geojson.id = docRef.id; // Ensure the GeoJSON object has the ID
-    projectFeaturesList.value.push(geojson);
-    console.log('Geometría guardada en Firestore y capa actualizada en el mapa');
+    console.log('Geometría guardada en Firestore. El mapa se actualizará vía onSnapshot.');
   } catch (error) {
     console.error('Error al guardar la geometría:', error);
-    if (newLayer) {
-      toRaw(drawnItems.value).removeLayer(newLayer);
-    }
   } finally {
     tempDrawnLayer.value = null;
     showNameModal.value = false;
@@ -508,11 +487,31 @@ onMounted(async () => {
         feature.id = doc.id;
         return feature;
       });
+    });
 
-      // Use watchEffect to reactively update layers
-      watchEffect(async () => {
-        toRaw(drawnItems.value).clearLayers(); // Clear to avoid duplicates
-        projectFeaturesList.value.forEach(feature => {
+    // Use watchEffect to reactively update layers based on projectFeaturesList changes
+    watchEffect(async () => {
+      if (!map.value || !drawnItems.value) return; // Ensure map and drawnItems are initialized
+
+      const currentFeatureIds = new Set(projectFeaturesList.value.map(f => f.id));
+      const layersToRemove = [];
+
+      // Identify layers to remove (features no longer in projectFeaturesList)
+      toRaw(drawnItems.value).eachLayer(layer => {
+        if (layer.feature && !currentFeatureIds.has(layer.feature.id)) {
+          layersToRemove.push(layer);
+        }
+      });
+
+      layersToRemove.forEach(layer => {
+        toRaw(drawnItems.value).removeLayer(layer);
+        leafletLayersMap.value.delete(layer.feature.id);
+      });
+
+      // Identify layers to add/update
+      projectFeaturesList.value.forEach(feature => {
+        if (!leafletLayersMap.value.has(feature.id)) {
+          // Add new feature
           L.geoJSON(feature, {
             pointToLayer: (f, latlng) => L.circleMarker(latlng, circleMarkerStyle),
             onEachFeature: (f, layer) => {
@@ -520,12 +519,35 @@ onMounted(async () => {
               bindFeatureClickEvent(layer);
               createAndBindPopup(layer);
               toRaw(drawnItems.value).addLayer(layer);
+              leafletLayersMap.value.set(feature.id, layer); // Store reference to the layer
             }
           });
-        });
-        await nextTick(); // Wait for DOM/render cycle
-        toRaw(map.value).invalidateSize(); // Fix any layout issues
+        } else {
+          // Feature exists, check for updates (simplified for now, just re-add if geometry changed)
+          // A more robust solution would compare geometries and update the existing layer
+          // For now, if a feature exists in Firestore, we assume its geometry might have changed
+          // and we re-add it to ensure consistency. This might still cause temporary visual glitches.
+          // A better approach for updates would be to use layer.setLatLngs, layer.setLatLng, etc.
+          // based on geometry type, but that's more complex.
+          const existingLayer = leafletLayersMap.value.get(feature.id);
+          if (JSON.stringify(existingLayer.feature.geometry) !== JSON.stringify(feature.geometry)) {
+            toRaw(drawnItems.value).removeLayer(existingLayer);
+            L.geoJSON(feature, {
+              pointToLayer: (f, latlng) => L.circleMarker(latlng, circleMarkerStyle),
+              onEachFeature: (f, layer) => {
+                layer.feature = f;
+                bindFeatureClickEvent(layer);
+                createAndBindPopup(layer);
+                toRaw(drawnItems.value).addLayer(layer);
+                leafletLayersMap.value.set(feature.id, layer);
+              }
+            });
+          }
+        }
       });
+
+      await nextTick(); // Wait for DOM/render cycle
+      toRaw(map.value).invalidateSize(); // Fix any layout issues
     });
 
     map.value.on(L.Draw.Event.DELETED, async (event) => {
