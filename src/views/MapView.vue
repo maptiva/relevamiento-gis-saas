@@ -89,6 +89,8 @@ const isEditingOrDrawing = ref(false);
 const showNameModal = ref(false);
 const tempDrawnLayer = ref(null);
 
+let unsubscribeFirestore = null; // Variable para almacenar la función de desuscripción de Firestore
+
 // Define common styles for drawn features
 const shapeOptions = {
   color: '#3388ff',       // Light blue (Leaflet default)
@@ -497,7 +499,7 @@ onMounted(async () => {
     // Real-time sync with Firestore using onSnapshot
     const featuresCollection = collection(db, 'projects', route.params.id, 'features');
     const q = query(featuresCollection);
-    onSnapshot(q, async (snapshot) => {
+    unsubscribeFirestore = onSnapshot(q, async (snapshot) => {
       projectFeaturesList.value = snapshot.docs.map(doc => {
         const featureData = doc.data();
         const feature = JSON.parse(featureData.geometry);
@@ -576,6 +578,12 @@ onBeforeUnmount(() => {
   }
   // Remove Escape key listener
   window.removeEventListener('keydown', handleEscapeKey);
+
+  // Unsubscribe from Firestore listener
+  if (unsubscribeFirestore) {
+    unsubscribeFirestore();
+    console.log('Firestore listener unsubscribed.');
+  }
 });
 
 function startDrawing(type) {
