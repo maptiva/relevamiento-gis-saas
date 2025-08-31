@@ -780,6 +780,34 @@ function startDrawing(type) {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden; /* Asegura que el mapa respete el borde redondeado */
 }
+
+@media (max-width: 768px) {
+  .toolbar-horizontal {
+    flex-direction: column;
+    align-items: stretch; /* Make child elements stretch to full width */
+    padding: 10px;
+  }
+
+  .drawing-tools {
+    flex-wrap: wrap;
+    justify-content: center; /* Center the buttons */
+  }
+
+  .action-button {
+    flex-grow: 1; /* Allow buttons to grow and fill space */
+    text-align: center;
+  }
+
+  .main-content {
+    flex-direction: column;
+    padding: 10px; /* Reset padding for smaller screens */
+    overflow-y: auto; /* Allow vertical scrolling if content overflows */
+  }
+
+  .map-container {
+    min-height: 300px; /* Ensure map has a minimum height */
+  }
+}
 </style>
 
 <style>

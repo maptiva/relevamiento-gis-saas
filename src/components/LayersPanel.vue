@@ -133,4 +133,16 @@ watch(() => props.selectedFeatureId, (newId) => {
   padding: 8px;
   border-radius: 4px;
 }
+
+@media (max-width: 768px) {
+  .layers-panel {
+    /* When stacked, let's give it a default height and allow it to be scrollable if content overflows */
+    min-height: 250px;
+    max-height: 40vh; /* Take up to 40% of the viewport height */
+  }
+
+  .layers-panel-expanded {
+    width: 100%; /* Take full width on small screens */
+  }
+}
 </style>
