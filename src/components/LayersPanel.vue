@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'; // Added nextTick
+import { ref, watch, nextTick, onMounted } from 'vue'; // Added onMounted and nextTick
 import FeatureItem from './FeatureItem.vue';
 
 const props = defineProps({
@@ -60,6 +60,13 @@ watch(() => props.selectedFeatureId, (newId) => {
         selectedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     });
+  }
+});
+
+onMounted(() => {
+  // Collapse the panel by default on mobile devices
+  if (window.innerWidth < 768) {
+    isExpanded.value = false;
   }
 });
 </script>
@@ -132,5 +139,21 @@ watch(() => props.selectedFeatureId, (newId) => {
   margin-bottom: 5px;
   padding: 8px;
   border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .layers-panel {
+    /* On mobile, it should always be full width, whether collapsed or expanded,
+       because it's in a vertical flex container. */
+    width: 100%;
+    flex-shrink: 0; /* Prevent panel from shrinking in flex layout */
+  }
+
+  .layers-panel-expanded {
+    /* When expanded on mobile, it takes full width and has a constrained height. */
+    width: 100%;
+    min-height: 250px;
+    max-height: 40vh;
+  }
 }
 </style>

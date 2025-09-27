@@ -98,4 +98,27 @@ const handleSignOut = async () => {
 .logout-button:hover {
   background-color: #c82333;
 }
+
+/* Media Query for Mobile Responsiveness */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.5rem 0.75rem; /* Reduce padding on smaller screens */
+  }
+
+  .user-email {
+    display: none; /* Hide user email to save space */
+  }
+
+  .nav-link {
+    margin-right: 0.5rem; /* Reduce margin */
+  }
+
+  .project-name-display {
+    /* Prevent long project names from breaking layout */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px; /* Adjust based on testing */
+  }
+}
 </style>
